@@ -85,9 +85,7 @@ namespace Liquid.GenAi.OpenAi
 
             messages.Messages.ForEach(m => requestMessages.Add(MapChatRequestMessage(m)));
 
-            var option = MapChatCompletionOptions(settings);
-
-            var responseWithoutStream = await client.CompleteChatAsync(requestMessages, option);
+            var option = MapChatCompletionOptions(settings);           
 
             if (functions != null)
             {
@@ -102,7 +100,12 @@ namespace Liquid.GenAi.OpenAi
                 }
             }
 
-            var response = responseWithoutStream.Value.Content[0].Text;
+            var responseWithoutStream = await client.CompleteChatAsync(requestMessages, option);
+
+
+            var response = responseWithoutStream.Value.FinishReason != ChatFinishReason.ToolCalls ?
+                responseWithoutStream.Value.Content[0].Text :
+                responseWithoutStream.Value.ToolCalls[0].FunctionArguments.ToString();
 
             var result = new ChatCompletionResult()
             {
